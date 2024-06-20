@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket System Dashboard</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mui/material@5.6.1/dist/material-ui.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="box">
+    <h2>Current Ticket</h2>
+    <div id="currentTicket" class="ticket-number">-</div>
+    <div id="boxInfo">-</div>
+  </div>
+  <div class="box">
+    <h2>Next 3 Tickets</h2>
+    <ul id="ticketList"></ul>
+  </div>
+  <audio id="ticketSound" src="/sounds/ticket-called.mp3"></audio>
+  <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Cuando separé las pantallas tuve que dejar este script acá porque no me actualizaba el ticket cuando se llamaba -->
+  <script>
+    const socket = io();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentTicket = document.getElementById('currentTicket');
+      const ticketList = document.getElementById('ticketList');
+      const ticketSound = document.getElementById('ticketSound');
+      const boxInfo = document.getElementById('boxInfo');
+
+      socket.on('updateQueue', (tickets) => {
+        ticketList.innerHTML = '';
+        tickets.slice(0, 3).forEach(ticket => {
+          const li = document.createElement('li');
+          li.textContent = `Ticket ${ticket.number}`;
+          ticketList.appendChild(li);
+        });
+      });
+
+      socket.on('ticketCalled', (currentTickets, nextTickets) => {
+        let latestTicket = null;
+        let calledFrom = null;
+
+        if (currentTickets.box1 && currentTickets.box2) {
+          latestTicket = currentTickets.box1.number > currentTickets.box2.number ? currentTickets.box1 : currentTickets.box2;
+          calledFrom = currentTickets.box1.number > currentTickets.box2.number ? 'Box 1' : 'Box 2';
+        } else if (currentTickets.box1) {
+          latestTicket = currentTickets.box1;
+          calledFrom = 'Box 1';
+        } else if (currentTickets.box2) {
+          latestTicket = currentTickets.box2;
+          calledFrom = 'Box 2';
+        }
+
+        if (latestTicket) {
+          currentTicket.textContent = `Ticket ${latestTicket.number}`;
+          boxInfo.textContent = `Called from: ${calledFrom}`;
+        } else {
+          currentTicket.textContent = '-';
+          boxInfo.textContent = '-';
+        }
+
+        ticketSound.play();
+
+        ticketList.innerHTML = '';
+        nextTickets.forEach(ticket => {
+          const li = document.createElement('li');
+          li.textContent = `Ticket ${ticket.number}`;
+          ticketList.appendChild(li);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

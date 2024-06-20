@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Box 1</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mui/material@5.6.1/dist/material-ui.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="box">
+    <h2>Box 1</h2>
+    <div id="box1Ticket" class="ticket-number">-</div>
+    <button id="box1Btn" class="button">Call Next Ticket</button>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Cuando separé las pantallas tuve que dejar este script acá porque no me actualizaba el ticket cuando se llamaba -->
+  <script>
+    const socket = io();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const box1Btn = document.getElementById('box1Btn');
+      const box1Ticket = document.getElementById('box1Ticket');
+
+      box1Btn.addEventListener('click', () => {
+        socket.emit('callTicket', 'box1');
+      });
+
+      socket.on('ticketCalled', (currentTickets) => {
+        if (currentTickets.box1) {
+          box1Ticket.textContent = `Ticket ${currentTickets.box1.number}`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
